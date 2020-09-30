@@ -1,0 +1,48 @@
+//============================================================================
+// Name        : A_star.cpp
+// Author      : Manish Sharma
+// Version     : 1.0
+// Description : 2D A* implementation, with L2 heuristic(optimistic guess)
+//============================================================================
+
+#include <iostream>
+#include "AStar.h"
+#include <fstream>
+
+int main() {
+	std::ofstream myfile;
+	myfile.open ("path.txt");
+	myfile << "x,y\n";
+
+	mopl::AStar AstarObj(20, 20, 5, 5);
+
+	// Perform basic API testing
+//	std::cout<< AstarObj.getGridXSize()<<"\n";
+//	std::cout<< AstarObj.getGridYSize()<<"\n";
+//	std::cout<< AstarObj.getGridResolutionX()<<"\n";
+//	std::cout<< AstarObj.getGridResolutionY()<<"\n";
+	auto searchGrid = AstarObj.getSearchGrid();
+//	std::cout<<searchGrid.size()<<", "<<searchGrid[0].size()<<"\n";
+//
+//	mopl::gridPose gp_1(0, 0);
+//	mopl::gridPose gp_2(50,0);
+//	std::cout<<AstarObj.isInsideGrid(gp_1)<<"\n";
+//	auto neighbors = AstarObj.expandNeighbors(gp_1);
+//	for(auto neighbor : neighbors){
+//		std::cout<<"neighbor : "<<neighbor.x<<", "<<neighbor.y<<"\n";
+//	}
+
+	mopl::pose p_1{0.0, 0.0};
+	mopl::pose p_2{8.9, 13.9};
+	std::cout<<"start : "<<AstarObj.getGridPoseFromPose(p_1).x<<", "<<AstarObj.getGridPoseFromPose(p_1).y<<"\n";
+	std::cout<<"end : "<<AstarObj.getGridPoseFromPose(p_2).x<<", "<<AstarObj.getGridPoseFromPose(p_2).y<<"\n";
+
+	auto path = AstarObj.search(p_1, p_2);
+
+	for(auto pathPoint : path){
+		std::cout<<"pathPoint : "<<pathPoint.x<<", "<<pathPoint.y<<"\n";
+		myfile<<pathPoint.x<<", "<<pathPoint.y<<"\n";
+	}
+
+	return 0;
+}
