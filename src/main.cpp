@@ -14,7 +14,7 @@ int main() {
 	myfile.open ("path.txt");
 	myfile << "x,y\n";
 
-	mopl::AStar AstarObj(20, 20, 5, 5);
+	mopl::AStar AstarObj(50, 5, 1, 5);
 
 	// Perform basic API testing
 //	std::cout<< AstarObj.getGridXSize()<<"\n";
@@ -22,7 +22,7 @@ int main() {
 //	std::cout<< AstarObj.getGridResolutionX()<<"\n";
 //	std::cout<< AstarObj.getGridResolutionY()<<"\n";
 	auto searchGrid = AstarObj.getSearchGrid();
-//	std::cout<<searchGrid.size()<<", "<<searchGrid[0].size()<<"\n";
+	std::cout<<"searchGrid Size : s = "<<searchGrid[0].size()<<", d = "<<searchGrid.size()<<"\n";
 //
 //	mopl::gridPose gp_1(0, 0);
 //	mopl::gridPose gp_2(50,0);
@@ -33,12 +33,12 @@ int main() {
 //	}
 
 	mopl::pose p_1{0.0, 0.0};
-	mopl::pose p_2{8.9, 13.9};
-	std::cout<<"start : "<<AstarObj.getGridPoseFromPose(p_1).x<<", "<<AstarObj.getGridPoseFromPose(p_1).y<<"\n";
-	std::cout<<"end : "<<AstarObj.getGridPoseFromPose(p_2).x<<", "<<AstarObj.getGridPoseFromPose(p_2).y<<"\n";
+	mopl::pose p_2{28.999999, 3.4};
+	std::cout<<"start : "<<AstarObj.getGridPoseFromPose(p_1).s<<", "<<AstarObj.getGridPoseFromPose(p_1).d<<"\n";
+	std::cout<<"end : "<<AstarObj.getGridPoseFromPose(p_2).s<<", "<<AstarObj.getGridPoseFromPose(p_2).d<<"\n";
 
 	auto path = AstarObj.search(p_1, p_2);
-
+	std::cout<<"path size : "<<path.size()<<"\n";
 	for(auto pathPoint : path){
 		std::cout<<"pathPoint : "<<pathPoint.x<<", "<<pathPoint.y<<"\n";
 		myfile<<pathPoint.x<<", "<<pathPoint.y<<"\n";

@@ -13,20 +13,23 @@ from matplotlib import pyplot as plt
 import time
 
 plt.close(0)
-
-df = pd.read_csv('path.txt')
 plt.figure(0);
-# plt.  .hold(True)
-val = max(max(df['y']),max(df['y'])) + 2
-plt.axis([-1,val,-1,val])
-plt.plot(df['x'], df['y'],'k-')
-plt.plot(np.arange(val),'g-')
-
 
 df2 = pd.read_csv('exploredGraph.txt')
-plt.plot(df2['x'], df2['y'],'r*')
+plt.plot(df2['x'], df2['y'],'r-*')
 plt.grid()
+
+df = pd.read_csv('path.txt')
+# plt.  .hold(True)
+val = max(max(df['x']),max(df['y'])) + 2
+plt.axis([-1,val,-1,val])
+plt.plot(df['x'], df['y'],'k-')
+# plt.plot(np.arange(val),'g-')
 plt.show()
+
+
+
+
 
 # for x in range(0, len(df['x'])):
 #     print(x)

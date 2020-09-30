@@ -15,20 +15,20 @@
 
 namespace mopl {
 
-AStar::AStar(INT gridXSize, INT gridYSize, INT gridResolutionX, INT gridResolutionY):
-	m_gridXSize(gridXSize),
-	m_gridYSize(gridYSize),
-	m_gridResolutionX(gridResolutionX),
-	m_gridResolutionY(gridResolutionY){
-	m_searchGrid = std::vector<std::vector<INT>>(gridYSize*gridResolutionY, std::vector<INT>(gridXSize*gridResolutionX, 0));
+AStar::AStar(INT gridSSize, INT gridDSize, INT gridResolutionS, INT gridResolutionD):
+	m_gridSSize(gridSSize),
+	m_gridDSize(gridDSize),
+	m_gridResolutionS(gridResolutionS),
+	m_gridResolutionD(gridResolutionD){
+	m_searchGrid = std::vector<std::vector<INT>>(m_gridDSize*m_gridResolutionD, std::vector<INT>(m_gridSSize*m_gridResolutionS, 0));
 }
 
-std::vector<gridPose> AStar::search(pose start, pose end){
+std::vector<pose> AStar::search(pose start, pose end){
 	std::ofstream myfile;
 	myfile.open ("exploredGraph.txt");
 	myfile << "x,y,cost\n";
 
-	std::vector<gridPose> path;
+	std::vector<pose> path;
 
 	// This is complete grid search and can take a lot of time
 	std::vector<std::vector<bool>> alreadyVisited(m_searchGrid.size(), std::vector<bool>(m_searchGrid[0].size(), false));
@@ -41,59 +41,63 @@ std::vector<gridPose> AStar::search(pose start, pose end){
 	auto startGridPose = getGridPoseFromPose(start);
 	auto endGridPose = getGridPoseFromPose(end);
 
-	std::cout<<"startGridPose : "<<startGridPose.x<<", "<<startGridPose.y<<"\n";
-	std::cout<<"endGridPose : "<<endGridPose.x<<", "<<endGridPose.y<<"\n";
+	std::cout<<"startGridPose : "<<startGridPose.s<<", "<<startGridPose.d<<"\n";
+	std::cout<<"endGridPose : "<<endGridPose.s<<", "<<endGridPose.d<<"\n";
 
-
-//	searchQueue.push(weightedGridPose(startGridPose, startGridPose, 0.0 + heuristic(startGridPose, endGridPose)));
 	searchQueue.push(weightedGridPose(startGridPose, startGridPose, 0.0, heuristic(startGridPose, endGridPose)));
 
 
 	bool pathFound = false;
-//	int counter = 0;
+	int counter = 0;
 	while(!searchQueue.empty())
 	{
+//		if(counter > 20){
+//			break;
+//		}
 		auto node = searchQueue.top();
 //		std::cout<<searchQueue.size()<<"\t";
 		searchQueue.pop();
-		if(alreadyVisited[node.data.x][node.data.y]){
+		if(alreadyVisited[node.data.d][node.data.s]){
 			continue;
 		}
-		myfile<<node.data.x<<", "<<node.data.y<<", "<<node.cost<<"\n";
-//		std::cout<<"\n"<<++counter<<": extractedNode : "<<node.data.x<<", "<<node.data.y<<"\n";
-//		std::cout<<searchQueue.size()<<"\t";
-		alreadyVisited[node.data.x][node.data.y] = true;
-		finalparents[node.data.x][node.data.y] = node.parent;
+		myfile<<getPoseFromGridPose(node.data).x<<", "<<getPoseFromGridPose(node.data).y<<", "<<node.cost<<"\n";
+		std::cout<<"\n"<<++counter<<": extractedNode : "<<node.data.s<<", "<<node.data.d<<"\n";
+		alreadyVisited[node.data.d][node.data.s] = true;
+		finalparents[node.data.d][node.data.s] = node.parent;
 
 		if(node.data == endGridPose){
+			std::cout<<"Path Found\n";
 			pathFound = true;
 			break;
 		}
 
 		auto neighbors = expandNeighbors(node.data);
 		for(auto neighbor : neighbors){
-			if(!alreadyVisited[neighbor.x][neighbor.y]){
+			if(!alreadyVisited[neighbor.d][neighbor.s]){
 				weightedGridPose w;
 				w.data = neighbor;
 				w.parent = node.data;
 //				w.cost = node.cost + heuristic(w.data, node.data) + heuristic(w.data, endGridPose); // only dividing by X resolution for now
-//				std::cout<<"neighbor : "<<w.data.x<<", "<<w.data.y<<", endGridPose : "<<endGridPose.x<<", "<<endGridPose.y<<"\n";
-//				std::cout<<"parent cost : "<<node.cost<<", heuristic cost : "<<heuristic(w.data, endGridPose)<<"\n";
+				std::cout<<"neighbor : "<<w.data.s<<", "<<w.data.d<<", endGridPose : "<<endGridPose.s<<", "<<endGridPose.d<<"\n";
+				std::cout<<"parent cost : "<<node.cost<<", heuristic cost : "<<heuristic(w.data, endGridPose)<<"\n";
 				w.cost = node.cost + 1;
 				w.heuristicCost = w.cost + heuristic(w.data, endGridPose); // only dividing by X resolution for now
 				searchQueue.push(w);
+			}else{
+
 			}
 		}
 //		std::cout<<searchQueue.size()<<"\n";
 	}
 
 	if(pathFound){
-
 		while(endGridPose != startGridPose){
-			path.push_back(endGridPose);
-			endGridPose = finalparents[endGridPose.x][endGridPose.y];
+			path.push_back(getPoseFromGridPose(endGridPose));
+			endGridPose = finalparents[endGridPose.d][endGridPose.s];
 		}
-		path.push_back(startGridPose);
+		path.push_back(getPoseFromGridPose(startGridPose));
+	}else{
+		std::cout<<"path not found\n";
 	}
 	return path;
 }
@@ -104,8 +108,8 @@ std::vector<gridPose> AStar::expandNeighbors(gridPose location){
 	neighbors.reserve(4);
 	// East neighbor
 	{
-		INT xn = location.x + 1;
-		INT yn = location.y;
+		INT xn = location.s;
+		INT yn = location.d + 1;
 		gridPose neighbor = gridPose(xn, yn);
 		if(isInsideGrid(neighbor)){
 			neighbors.push_back(neighbor);
@@ -114,8 +118,8 @@ std::vector<gridPose> AStar::expandNeighbors(gridPose location){
 
 	// West neighbor
 	{
-		INT xn = location.x - 1;
-		INT yn = location.y;
+		INT xn = location.s;
+		INT yn = location.d - 1;
 		gridPose neighbor = gridPose(xn, yn);
 		if(isInsideGrid(neighbor)){
 			neighbors.push_back(neighbor);
@@ -124,8 +128,8 @@ std::vector<gridPose> AStar::expandNeighbors(gridPose location){
 
 	// North neighbor
 	{
-		INT xn = location.x;
-		INT yn = location.y + 1;
+		INT xn = location.s + 1;
+		INT yn = location.d;
 		gridPose neighbor = gridPose(xn, yn);
 		if(isInsideGrid(neighbor)){
 			neighbors.push_back(neighbor);
@@ -134,77 +138,41 @@ std::vector<gridPose> AStar::expandNeighbors(gridPose location){
 
 	// South neighbor
 	{
-		INT xn = location.x;
-		INT yn = location.y - 1;
+		INT xn = location.s - 1;
+		INT yn = location.d;
 		gridPose neighbor = gridPose(xn, yn);
 		if(isInsideGrid(neighbor)){
 			neighbors.push_back(neighbor);
 		}
 	}
 
-//	// North East neighbor
-//	{
-//		INT xn = location.x + 1;
-//		INT yn = location.y + 1;
-//		gridPose neighbor = gridPose(xn, yn);
-//		if(isInsideGrid(neighbor)){
-//			neighbors.push_back(neighbor);
-//		}
-//	}
-//
-//	// North South neighbor
-//	{
-//		INT xn = location.x - 1;
-//		INT yn = location.y + 1;
-//		gridPose neighbor = gridPose(xn, yn);
-//		if(isInsideGrid(neighbor)){
-//			neighbors.push_back(neighbor);
-//		}
-//	}
-//
-//	// South East neighbor
-//	{
-//		INT xn = location.x + 1;
-//		INT yn = location.y - 1;
-//		gridPose neighbor = gridPose(xn, yn);
-//		if(isInsideGrid(neighbor)){
-//			neighbors.push_back(neighbor);
-//		}
-//	}
-//
-//	// South West neighbor
-//	{
-//		INT xn = location.x - 1;
-//		INT yn = location.y - 1;
-//		gridPose neighbor = gridPose(xn, yn);
-//		if(isInsideGrid(neighbor)){
-//			neighbors.push_back(neighbor);
-//		}
-//	}
-
 	return neighbors;
 }
 
 gridPose AStar::getGridPoseFromPose(pose p){
 	gridPose gp;
-	gp.x = p.x * m_gridResolutionX;
-	gp.y = p.y * m_gridResolutionY;
+	gp.s = p.x * m_gridResolutionS;
+	gp.d = p.y * m_gridResolutionD;
 	return gp;
 }
 
-//pose AStar::getPoseFromGridPose(gridPose gp){
-//	pose p;
-//	p.x = (gp.x + 1) * 0.5;
-//	p.y = (gp.y + 1) * 0.5;
-//	return p;
-//}
+pose AStar::getPoseFromGridPose(gridPose gp){
+	pose p;
+//	m_gridResolutionS(gridResolutionS),
+//	m_gridResolutionD(gridResolutionD){
+	p.x = 0.5 + static_cast<double>(gp.s) / m_gridResolutionS;
+	p.y = 0.5 + static_cast<double>(gp.d) / m_gridResolutionD;
+	return p;
+}
 
 bool AStar::isInsideGrid(gridPose gp){
 	// First two checks are also helping unsafe calls to m_searchGrid[0].size()
-	return m_searchGrid.size() > 0u && m_searchGrid[0].size() > 0u &&
-			gp.y >= 0 && gp.x >= 0 &&
-			gp.y < static_cast<INT>(m_searchGrid.size()) &&
-			gp.x < static_cast<INT>(m_searchGrid[0].size());
+	bool retVal =  m_searchGrid.size() > 0u && m_searchGrid[0].size() > 0u &&
+			gp.d >= 0 && gp.s >= 0 &&
+			gp.d < static_cast<INT>(m_searchGrid.size()) &&
+			gp.s < static_cast<INT>(m_searchGrid[0].size());
+	std::cout<<"returning "<<retVal<<" for gp : "<<gp.s<<", "<<gp.d<<"\n";
+	return retVal;
 }
 
 bool AStar::isCollisionFree(gridPose gp){
@@ -212,13 +180,13 @@ bool AStar::isCollisionFree(gridPose gp){
 }
 
 double AStar::heuristicL2(gridPose gp, gridPose dest){
-	return ((gp.x-dest.x)*(gp.x-dest.x) +
-			(gp.y-dest.y)*(gp.y-dest.y));
+	return ((gp.s-dest.s)*(gp.s-dest.s) +
+			(gp.d-dest.d)*(gp.d-dest.d));
 }
 
 double AStar::heuristicLInfinity(gridPose gp, gridPose dest){
-	return (std::abs(gp.x-dest.x) +
-			std::abs(gp.y-dest.y))*2;
+	return (std::abs(gp.s-dest.s) +
+			std::abs(gp.d-dest.d));
 }
 
 double AStar::heuristic(gridPose gp, gridPose dest){

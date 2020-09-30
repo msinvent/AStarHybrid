@@ -32,47 +32,47 @@ public:
 // I had to define == and != operators for this class
 struct gridPose {
 	gridPose() = default;
-	gridPose(INT xp, INT yp){
-		x = xp;
-		y = yp;
+	gridPose(INT sp, INT dp){
+		s = sp;
+		d = dp;
 	}
 	bool operator ==(const gridPose& rhs){
-		return this->x == rhs.x && this->y == rhs.y;
+		return this->s == rhs.s && this->d == rhs.d;
 	}
 	bool operator !=(const gridPose& rhs){
 		return !(*this == rhs);
 	}
-	INT x;
-	INT y;
+	INT s;
+	INT d;
 };
 
 class AStar {
 public:
 	AStar(INT gridXSize, INT gridYSize, INT gridResolutionX = 1, INT gridResolutionY = 1);
-	std::vector<gridPose> search(pose start, pose end);
+	std::vector<pose> search(pose start, pose end);
 	std::vector<gridPose> expandNeighbors(gridPose location);
 	gridPose getGridPoseFromPose(pose p);
-//	pose getPoseFromGridPose(gridPose gp);
+	pose getPoseFromGridPose(gridPose gp);
 	bool isInsideGrid(gridPose gp);
 	bool isCollisionFree(gridPose gp);
 	double heuristicL2(gridPose gp, gridPose dest);
 	double heuristicLInfinity(gridPose gp, gridPose dest);
 	double heuristic(gridPose gp, gridPose dest);
 
-	INT getGridXSize(){
-		return m_gridXSize;
+	INT getGridSSize(){
+		return m_gridSSize;
 	}
 
-	INT getGridYSize(){
-		return m_gridYSize;
+	INT getGridDSize(){
+		return m_gridDSize;
 	}
 
-	INT getGridResolutionX(){
-		return m_gridResolutionX;
+	INT getGridResolutionS(){
+		return m_gridResolutionS;
 	}
 
-	INT getGridResolutionY(){
-		return m_gridResolutionY;
+	INT getGridResolutionD(){
+		return m_gridResolutionD;
 	}
 
 	const std::vector<std::vector<INT>>& getSearchGrid(){
@@ -80,10 +80,10 @@ public:
 	}
 
 private:
-	INT m_gridXSize;
-	INT m_gridYSize;
-	INT m_gridResolutionX;
-	INT m_gridResolutionY;
+	INT m_gridSSize;
+	INT m_gridDSize;
+	INT m_gridResolutionS;
+	INT m_gridResolutionD;
 	std::vector<std::vector<INT>> m_searchGrid;
 };
 
